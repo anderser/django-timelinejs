@@ -6,15 +6,15 @@ from django.utils import simplejson
 class Timeline(models.Model):
     headline = models.CharField(max_length=200, help_text='Headline for timeline')
     type = models.CharField(max_length=50, default="default")
-    start_date = models.DateField(blank=True, help_text='Timeline start date')
+    start_date = models.DateField(blank=True, help_text='Timeline start date', null=True)
     text = models.TextField(blank=True, help_text='Description of timeline')
-    asset_media = models.CharField(max_length=200, blank=True, verbose_name='media', help_text='Media to add to even info: Picutre link, YouTube, Wikipedia, etc.')
+    asset_media = models.CharField(max_length=200, blank=True, verbose_name='media', help_text='Media to add to timeline info: Picture link, YouTube, Wikipedia, etc.')
     asset_credit = models.CharField(max_length=200, blank=True, verbose_name='credit', help_text='Media credits here')
     asset_caption = models.CharField(max_length=200, blank=True, verbose_name='caption', help_text='Caption for media')
     
     def to_dict(self):
         d = {}
-        d['startDate'] = self.start_date.strftime('%Y,%m,%d')
+        d['startDate'] = self.start_date.strftime('%Y,%m,%d') if self.start_date else ""
         d['type'] = self.type
         d['headline'] = self.headline
         d['text'] = self.text
@@ -32,24 +32,34 @@ class Timeline(models.Model):
 class TimelineEvent(models.Model):
     timeline = models.ForeignKey(Timeline)
     start_date = models.DateField(help_text='Event start date')
+    start_time = models.TimeField(help_text='Event start time', blank=True, null=True)
     end_date = models.DateField(blank=True, null=True, help_text='Event end date')
+    end_time = models.TimeField(help_text='Event end time', blank=True, null=True)
     headline = models.CharField(max_length=200, blank=True, help_text='Headline for event')
     text = models.TextField(blank=True, help_text='Text description of event')
     asset_media = models.CharField(max_length=200, blank=True, verbose_name='media', help_text='Media to add to even info: Picutre link, YouTube, Wikipedia, etc.')
     asset_credit = models.CharField(max_length=200, blank=True, verbose_name='credit', help_text='Media credits here')
     asset_caption = models.CharField(max_length=200, blank=True, verbose_name='caption', help_text='Caption for media')
-    
+    tag = models.CharField(max_length=200, blank=True, null=True, verbose_name='tag', help_text='Tag/group name for the event')
+
     def to_dict(self):
         d = {}
-        d['startDate'] = self.start_date.strftime('%Y,%m,%d')
+
+        #Allow start time
+        if self.start_time:
+            d['startDate'] = '%s,%s' % (self.start_date.strftime('%Y,%m,%d'), self.start_time.strftime('%H,%M,%S'))
+        else:
+            d['startDate'] = self.start_date.strftime('%Y,%m,%d')
+
         d['endDate'] = self.end_date.strftime('%Y,%m,%d') if self.end_date else d['startDate']
         d['headline'] = self.headline
         d['text'] = self.text
         d['asset'] = {'media': self.asset_media, 'credit': self.asset_credit, 'caption': self.asset_caption }
+        d['tag'] = self.tag if self.tag else ''
         return d
     
     def __str__(self):
-        return "%s - %s %s" % (self.start_date, self.end_date, self.headline)
+        return "%s - %s %s (%s)" % (self.start_date, self.end_date if self.end_date else '', self.headline , self.tag if self.tag else '')
 
 class TimelineOptions(models.Model):
     FONT_CHOICES = (
