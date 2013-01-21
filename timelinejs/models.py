@@ -27,7 +27,7 @@ class Timeline(models.Model):
         return timeline
     
     def __str__(self):
-        return "%s - %s" % (self.start_date, self.headline)
+        return "%s - %s" % (self.start_date if self.start_date else '', self.headline)
 
 class TimelineEvent(models.Model):
     timeline = models.ForeignKey(Timeline)
@@ -51,7 +51,16 @@ class TimelineEvent(models.Model):
         else:
             d['startDate'] = self.start_date.strftime('%Y,%m,%d')
 
-        d['endDate'] = self.end_date.strftime('%Y,%m,%d') if self.end_date else d['startDate']
+        #Allow end time
+        if self.end_date:
+            if self.end_time:
+                d['endDate'] = '%s,%s' % (self.start_date.strftime('%Y,%m,%d'), self.start_time.strftime('%H,%M,%S'))
+            else:
+                d['endDate'] = self.start_date.strftime('%Y,%m,%d')
+        else:
+            d['endDate'] = d['startDate']
+
+
         d['headline'] = self.headline
         d['text'] = self.text
         d['asset'] = {'media': self.asset_media, 'credit': self.asset_credit, 'caption': self.asset_caption }
