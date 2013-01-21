@@ -1,7 +1,6 @@
 from django.contrib.admin import site, ModelAdmin, StackedInline
 from timelinejs.models import Timeline, TimelineEvent, TimelineOptions
 
-
 class CommonMedia:
     js = (
       #'https://ajax.googleapis.com/ajax/libs/dojo/1.6.0/dojo/dojo.xd.js',
@@ -11,12 +10,24 @@ class CommonMedia:
     css = {
       'all': ('admin/css/editor.css',),
     }
-  
+
 class OptionsInline(StackedInline):
     model = TimelineOptions
     
 class EventsInline(StackedInline):
     model = TimelineEvent
+    fieldsets = (
+        (None, {'fields': (
+                           ('start_date', 'start_time'),
+                           ('end_date', 'end_time'),
+                           ('headline', 'tag'),
+                           'text',
+                           'asset_media',
+                           ('asset_credit', 'asset_caption'),
+                           
+                          )
+        }),
+    )
     
 class TimelineAdmin(ModelAdmin):
     fieldsets = (
